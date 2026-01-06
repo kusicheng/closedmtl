@@ -1,5 +1,5 @@
-from translation_API import translation_request as tlr
-from zip_reader import read_img
+from api_networking_components.translation_API import translation_request as tlr
+from api_networking_components.zip_reader import read_img
 
 def main():
     pass
