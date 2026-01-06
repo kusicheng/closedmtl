@@ -3,7 +3,7 @@ import zipfile
 import tempfile
 import shutil
 
-def read_img(zip_path):
+def read_img(zip_path:str="nothing"):
     if not os.path.exists(zip_path):
         return ["ERR_PATHDNE"]
     
