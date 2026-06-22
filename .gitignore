@@ -1,1 +1,7 @@
 training_data/
+cc_mnt/
+.venv_gpu/
+.pip_cache/
+.pip_tmp/
+models/
+.pip_cache/
