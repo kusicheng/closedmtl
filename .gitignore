@@ -5,3 +5,13 @@ cc_mnt/
 .pip_tmp/
 models/
 .pip_cache/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+outputs/
+.text-replacement-*/
+test_output/
+.upload-*/
+archive/

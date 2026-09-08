@@ -1,0 +1,48 @@
+{
+  "model": "best.pt",
+  "data": "training_data\\speech-bubbles-detection-yolo\\speech_bubbles.yaml",
+  "split": "val",
+  "imgsz": 640,
+  "batch": 8,
+  "device": "cpu",
+  "precision": 0.8110089321996078,
+  "recall": 0.9011444904417619,
+  "f1": 0.853704138059379,
+  "results": {
+    "metrics/precision(B)": 0.8110089321996078,
+    "metrics/recall(B)": 0.9011444904417619,
+    "metrics/mAP50(B)": 0.8862784866627451,
+    "metrics/mAP50-95(B)": 0.7207292152789745,
+    "fitness": 0.7207292152789745
+  },
+  "validation_run_dir": "runs\\detect\\best_pt_val",
+  "examples_dir": "runs\\detect\\best_pt_val_examples",
+  "random_seed": 650314833,
+  "examples": [
+    {
+      "source": "training_data\\speech-bubbles-detection-yolo\\images\\valid\\-1231-_jpg.rf.5310823e535b2c2ec4bb5426001a8aa4.jpg",
+      "annotated": "runs\\detect\\best_pt_val_examples\\image0.jpg",
+      "detections": 7
+    },
+    {
+      "source": "training_data\\speech-bubbles-detection-yolo\\images\\valid\\-950-_jpg.rf.6fc76e6a1a731cfbf8c78fb153f92519.jpg",
+      "annotated": "runs\\detect\\best_pt_val_examples\\image1.jpg",
+      "detections": 6
+    },
+    {
+      "source": "training_data\\speech-bubbles-detection-yolo\\images\\valid\\-23-_jpg.rf.8d90f2a45bdd0fb1d70188b5a1874e15.jpg",
+      "annotated": "runs\\detect\\best_pt_val_examples\\image2.jpg",
+      "detections": 6
+    },
+    {
+      "source": "training_data\\speech-bubbles-detection-yolo\\images\\valid\\-1886-_jpg.rf.9fc863a8bf3300297e656be84ce89b07.jpg",
+      "annotated": "runs\\detect\\best_pt_val_examples\\image3.jpg",
+      "detections": 4
+    },
+    {
+      "source": "training_data\\speech-bubbles-detection-yolo\\images\\valid\\-1268-_jpg.rf.aec73fc6699de62479fcc725398c5431.jpg",
+      "annotated": "runs\\detect\\best_pt_val_examples\\image4.jpg",
+      "detections": 5
+    }
+  ]
+}
