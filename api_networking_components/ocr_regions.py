@@ -5,22 +5,33 @@ top to bottom and right to left. Coordinates refer to stored image pixels.
 """
 
 import math
+import json
 import os
 from pathlib import Path
 
 
 def load_models(weights, ocr_model="kha-white/manga-ocr-base"):
-    """Load YOLO and Manga OCR lazily in the caller's Python environment."""
+    """Load YOLO and a local TorchScript export or standard Manga OCR model."""
     root=Path(__file__).resolve().parents[1]
     os.environ.setdefault("HF_HOME", str(root/"models/huggingface"))
     os.environ.setdefault("YOLO_CONFIG_DIR", str(root/"models/ultralytics_config"))
     Path(os.environ["YOLO_CONFIG_DIR"]).mkdir(parents=True, exist_ok=True)
-    from manga_ocr import MangaOcr
     from ultralytics import YOLO
 
     if not Path(weights).is_file():
         raise FileNotFoundError(weights)
-    return YOLO(str(weights)), MangaOcr(pretrained_model_name_or_path=ocr_model)
+    manifest=Path(ocr_model).joinpath("script_manifest.json")
+    if manifest.is_file():
+        if json.loads(manifest.read_text(encoding="utf-8")).get("use_cache", False):
+            from training_scripts.ocr_cached_runtime import CachedScriptOcr
+            ocr=CachedScriptOcr(ocr_model)
+        else:
+            from training_scripts.ocr_script_runtime import ScriptOcr
+            ocr=ScriptOcr(ocr_model)
+    else:
+        from manga_ocr import MangaOcr
+        ocr=MangaOcr(pretrained_model_name_or_path=ocr_model)
+    return YOLO(str(weights)), ocr
 
 
 def _overlap(first, second):

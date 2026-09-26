@@ -7,7 +7,6 @@ from pathlib import Path
 import sys
 import zipfile
 
-
 def build(root):
     root=Path(root).resolve()
     plan=json.loads((root/"plan.json").read_text(encoding="utf-8"))

@@ -15,3 +15,6 @@ outputs/
 test_output/
 .upload-*/
 archive/
+ARCHIVE/
+AGENTS.md
+runs/ocr/

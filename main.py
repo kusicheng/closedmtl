@@ -1,4 +1,4 @@
-"""Command-line entry point for text translation."""
+"""Command-line entry point for text translation and the images subcommand."""
 
 import argparse
 import sys
@@ -9,11 +9,11 @@ def main():
     if len(sys.argv)>1 and sys.argv[1]=="images":
         from api_networking_components.image_pipeline import main as images_main
         return images_main(sys.argv[2:])
-    parser=argparse.ArgumentParser(description="Detect a text's language and translate it through OpenRouter.")
-    parser.add_argument("--text", help="Text to translate; reads standard input if omitted.")
-    parser.add_argument("--target", required=True, help="Target language name or code, such as English or en.")
+    parser=argparse.ArgumentParser(description="Detect a text's language and translate it")
+    parser.add_argument("--text", help="Text to translate; if not provided, reads from stdin.")
+    parser.add_argument("--target", required=True, help="Target language")
     parser.add_argument("--source", default="detect language", help="Source language; default: detect language.")
-    parser.add_argument("--model", help="OpenRouter model ID; defaults to OPENROUTER_MODEL or the project default.")
+    parser.add_argument("--model", help="OpenRouter model ID; defaults to OPENROUTER_MODEL or minimax.")
     args=parser.parse_args()
     text=args.text if args.text is not None else sys.stdin.read()
     try:

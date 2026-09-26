@@ -141,6 +141,7 @@ def main(argv=None):
     parser.add_argument("--target", default="en")
     parser.add_argument("--font", required=True, type=Path)
     parser.add_argument("--weights", type=Path, default=ROOT/"models/best/speech_bubble_yolo_s_gpu.pt")
+    parser.add_argument("--ocr-model", help="Local TorchScript OCR export, Manga OCR directory, or model ID.")
     args=parser.parse_args(argv)
     if args.output.exists():
         parser.error("Output directory already exists.")
@@ -148,7 +149,8 @@ def main(argv=None):
     staging=Path(tempfile.mkdtemp(prefix=".upload-", dir=args.output.parent)).resolve()
     try:
         paths=extract_zip(args.zip, staging/"images")
-        detector, ocr=load_models(args.weights)
+        detector, ocr=(load_models(args.weights, ocr_model=args.ocr_model)
+                       if args.ocr_model is not None else load_models(args.weights))
         result=process_images(paths, args.output, detector=detector, ocr=ocr,
                               font_path=args.font, target=args.target)
     except Exception:
