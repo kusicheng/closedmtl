@@ -295,5 +295,3 @@ The exporter verifies this binding and uses that size when `--imgsz` is omitted.
 Older checkpoints without the config retain the exporter's 768 default.
 Direct Ultralytics calls still require an explicit `imgsz=1024`; this companion
 config is consumed by the project exporter. A stale config is rejected.
-
-Do not use the ask skill; request data or calibration directly only after verifying the specific need.
