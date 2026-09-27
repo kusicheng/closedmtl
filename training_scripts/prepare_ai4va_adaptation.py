@@ -68,6 +68,7 @@ def assign_issues(stats, seed=20260923, minimum_masks=200, attempts=10000):
 
 
 def inspect_sources(dataset, audit_path):
+    dataset=Path(dataset).resolve(strict=True)
     audit=load_json(audit_path)
     mapping_path=dataset/"mapping_manifest.json"
     mapping=load_json(mapping_path)
@@ -96,7 +97,7 @@ def inspect_sources(dataset, audit_path):
     if digest(frozen_path)!=audit["frozen_mapping_sha256"]:
         raise ValueError("Frozen external issue mapping changed after prospective audit")
     frozen=load_json(frozen_path)
-    frozen_issues={row["issue_id"] for row in frozen["images"]}
+    frozen_issues={row["issue_id"] for row in frozen["images"] if row.get("sha256")}
     frozen_hashes={row["sha256"] for row in frozen["images"] if row.get("sha256")}
     prospective={row["image_id"]:row for row in audit["pages"] if not row["overlaps_frozen_evaluation_issue"]}
     organized={row["image_id"]:row for row in mapping["images"]}

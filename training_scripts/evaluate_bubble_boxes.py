@@ -134,7 +134,10 @@ def evaluate(args, model=None):
         raise FileExistsError("Use fresh, distinct output report and evidence paths")
     if args.limit is not None and args.limit<=0:
         raise ValueError("--limit must be positive")
-    settings={"imgsz":768, "device":args.device, "half":False, "rect":False,
+    imgsz=getattr(args, "imgsz", 768)
+    if type(imgsz) is not int or imgsz<=0 or imgsz%32:
+        raise ValueError("Image size must be a positive multiple of32")
+    settings={"imgsz":imgsz, "device":args.device, "half":False, "rect":False,
               "retina_masks":True, "conf":0.35, "iou":0.5, "agnostic_nms":True,
               "max_det":300, "verbose":False, "save":False}
     manifest_identity=inspect_manifest(manifest)
@@ -216,5 +219,6 @@ if __name__=="__main__":
     parser.add_argument("--output", required=True)
     parser.add_argument("--mayocream", action="store_true")
     parser.add_argument("--device", default="0")
+    parser.add_argument("--imgsz", type=int, default=768)
     parser.add_argument("--limit", type=int, help="Smoke only; incomplete coverage is explicitly marked")
     evaluate(parser.parse_args())

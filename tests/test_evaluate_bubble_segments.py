@@ -64,6 +64,66 @@ class FakeModel:
 
 
 class ExactMaskTests(unittest.TestCase):
+    def test_background_padding_and_translation_preserve_instance_scores_and_ious(self):
+        from pycocotools import mask as coco_mask
+
+        targets=np.zeros((2, 20, 30), dtype=np.uint8)
+        targets[0, 2:8, 3:11]=1
+        targets[1, 12:17, 19:26]=1
+        predictions=np.zeros_like(targets)
+        predictions[0, 2:8, 4:12]=1
+        predictions[1, 10:13, 1:4]=1
+
+        def score(target_masks, prediction_masks):
+            source=record(annotations=False)
+            source["height"], source["width"]=target_masks.shape[1:]
+            for index, mask in enumerate(target_masks):
+                rle=coco_mask.encode(np.asfortranarray(mask))
+                source["annotations"].append({
+                    "id":index, "image_id":source["image_id"], "category_id":5, "iscrowd":0,
+                    "bbox":[int(value) for value in coco_mask.toBbox(rle)],
+                    "area":int(coco_mask.area(rle)),
+                    "segmentation":{"size":list(mask.shape), "counts":rle["counts"].decode("ascii")},
+                })
+            candidates=[]
+            for mask in prediction_masks:
+                cropped=crop_mask(mask)
+                candidates.append({"bbox":cropped["bbox"], "confidence":0.9, "mask":cropped})
+            return score_image(source, candidates, (0.5, 0.75))
+
+        original=score(targets, predictions)
+        padding=((0, 0), (7, 11), (13, 9))
+        padded_targets=np.pad(targets, padding)
+        padded_predictions=np.pad(predictions, padding)
+        padded=score(padded_targets, padded_predictions)
+        self.assertEqual(original["counts"], padded["counts"])
+        self.assertEqual(original["matches"], padded["matches"])
+        for threshold in ("0.50", "0.75"):
+            for kind in ("boxes", "masks"):
+                counts=padded["counts"][threshold][kind]
+                self.assertEqual((counts["tp"], counts["fp"], counts["fn"]), (1, 1, 1))
+                self.assertEqual(counts["f1"], 0.5)
+                self.assertEqual(padded["matches"][threshold][kind][0]["iou"], 7/9)
+        original_iou=mask_ious([crop_mask(mask) for mask in targets],
+                               [crop_mask(mask) for mask in predictions])
+        padded_iou=mask_ious([crop_mask(mask) for mask in padded_targets],
+                             [crop_mask(mask) for mask in padded_predictions])
+        np.testing.assert_array_equal(original_iou, padded_iou)
+        np.testing.assert_array_equal(padded["predictions"][0]["bbox"],
+                                      np.array(original["predictions"][0]["bbox"])+[13, 7, 13, 7])
+        original_accuracy=float(np.mean(targets.any(axis=0)==predictions.any(axis=0)))
+        padded_accuracy=float(np.mean(padded_targets.any(axis=0)==padded_predictions.any(axis=0)))
+        self.assertAlmostEqual(original_accuracy, 1-56/600)
+        self.assertAlmostEqual(padded_accuracy, 1-56/1976)
+        self.assertGreater(padded_accuracy, original_accuracy)
+
+    def test_deployed_prediction_rejects_masks_left_on_padded_canvas(self):
+        boxes=SimpleNamespace(xyxy=torch.tensor([[1, 1, 4, 3]]), conf=torch.tensor([0.9]))
+        result=SimpleNamespace(boxes=boxes, masks=SimpleNamespace(data=torch.zeros((1, 8, 8))))
+        model=SimpleNamespace(predict=lambda image, **settings:[result])
+        with self.assertRaisesRegex(ValueError, "original-size masks"):
+            deployed_predictions(model, np.zeros((4, 5, 3), dtype=np.uint8), {"retina_masks":True})
+
     def test_cropped_intersections_match_full_rasters_with_holes(self):
         rng=np.random.default_rng(2)
         targets=rng.random((7, 20, 30))>0.7

@@ -156,6 +156,30 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(result["scores"]["small"]["mask_f1_conservative"], 0.89)
         self.assertFalse(result["ai4va_subset_target_reached"]["small"])
 
+    def test_declared_noninferiority_allows_better_mayo_without_claiming_equivalence(self):
+        protocol=read_json(self.protocol)
+        protocol["mayocream_noninferiority_tolerance"]=0.01
+        write_json(self.protocol, protocol)
+        self.make_report("mayocream", 96)
+        result=self.comparison()
+        self.assertFalse(result["practically_comparable"])
+        self.assertTrue(result["both_retrained_models_meet_declared_quality_requirement"])
+        self.make_report("small", 99)
+        self.assertFalse(self.comparison()["both_retrained_models_meet_declared_quality_requirement"])
+
+    def test_noninferiority_cannot_excuse_below_target_or_widen_the_frozen_margin(self):
+        protocol=read_json(self.protocol)
+        protocol["mayocream_noninferiority_tolerance"]=0.01
+        write_json(self.protocol, protocol)
+        self.make_report("small", 89)
+        result=self.comparison()
+        self.assertTrue(result["mayocream_meets_declared_comparison"])
+        self.assertFalse(result["both_retrained_models_meet_declared_quality_requirement"])
+        protocol["mayocream_noninferiority_tolerance"]=0.05
+        write_json(self.protocol, protocol)
+        with self.assertRaisesRegex(ValueError, "tolerance must"):
+            self.comparison()
+
     def test_report_aggregate_tampering_is_rejected(self):
         report=read_json(self.paths["small"])
         report["boxes"]["tp"]+=1

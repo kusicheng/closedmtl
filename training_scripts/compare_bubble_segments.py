@@ -275,6 +275,13 @@ def compare(baseline, small, mayocream, protocol_path=DEFAULT_PROTOCOL, output=N
             for name, item in checked.items()}
     deltas={key:scores["mayocream"][key]-scores["small"][key] for key in scores["small"]}
     comparable=abs(deltas["box_f1"])<=0.01+1e-12 and abs(deltas["mask_f1_conservative"])<=0.01+1e-12
+    tolerance=protocol.get("mayocream_noninferiority_tolerance")
+    if tolerance is not None:
+        require(type(tolerance) in (int, float) and tolerance==0.01,
+                "Declared Mayocream noninferiority tolerance must be0.01")
+    at_least_comparable=(all(deltas[key]>=-tolerance-1e-12
+                            for key in ("box_f1", "mask_f1_conservative"))
+                         if tolerance is not None else comparable)
     gates={name:item["recomputed"]["mask_valid"] and min(values["box_f1"], values["mask_f1_conservative"])>=0.9
            for name, values in scores.items() for item in [checked[name]]}
     relevant=[deltas["box_f1"], deltas["mask_f1_conservative"]]
@@ -291,6 +298,9 @@ def compare(baseline, small, mayocream, protocol_path=DEFAULT_PROTOCOL, output=N
             "ai4va_subset_target_reached":gates,
             "both_candidate_models_pass_and_comparable":gates["small"] and gates["mayocream"] and comparable,
             "both_retrained_models_pass_and_comparable":gates["small"] and gates["mayocream"] and comparable and lineage["verified"],
+            "mayocream_meets_declared_comparison":at_least_comparable,
+            "comparison_allows_mayocream_to_outperform":tolerance is not None,
+            "both_retrained_models_meet_declared_quality_requirement":gates["small"] and gates["mayocream"] and at_least_comparable and lineage["verified"],
             "training_lineage":lineage,
             "observed_joint_quality_preference":preference,
             "architecture_superiority_established":False,

@@ -131,6 +131,19 @@ class BoxEvidenceTests(unittest.TestCase):
         self.assertFalse(self.output.exists())
         self.assertEqual(len(self.output.with_suffix(".predictions.jsonl").read_text().splitlines()), 1)
 
+    def test_resolution_is_used_and_bound_to_report_identity(self):
+        self.args.imgsz=1024
+        model=FakeModel([[prediction()], []])
+        report=evaluate(self.args, model=model)
+        self.assertEqual(report["identity"]["settings"]["imgsz"], 1024)
+        self.assertTrue(all(settings["imgsz"]==1024 for settings in model.settings))
+
+    def test_invalid_resolution_cannot_create_evaluation_evidence(self):
+        self.args.imgsz=1001
+        with self.assertRaisesRegex(ValueError, "multiple of32"):
+            evaluate(self.args, model=FakeModel([]))
+        self.assertFalse(self.output.with_suffix(".identity.json").exists())
+
     def test_wrong_image_dimensions_fail_even_when_hash_matches(self):
         path=Path(self.rows[0]["image_path"])
         Image.new("RGB", (7, 6)).save(path)
